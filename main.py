@@ -46,7 +46,7 @@ ground_2 = [pygame.Rect(280,355,520,35)]
 
 ground_3 = [pygame.Rect(280,325,520,30)]
 
-
+GREEN = (0, 255, 0)
 
 # 自機弾１のクラス
 class Shot_1(pygame.sprite.Sprite):
@@ -289,6 +289,16 @@ class Shot_2_Hit(pygame.sprite.Sprite):
         if self.count == 10:
             self.kill()
 
+class Sol_1(pygame.sprite.Sprite):
+    def __init__(self,x,y,z):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+        self.hp = 1
+
+        self.images = list()
+        self.images.append(pygame.image.load("graphic/sol1.png").convert_alpha())
+        self.images.append(pygame.image.load("graphic/sol2.png").convert_alpha())
+        self.images.append(pygame.image.load("graphic/sol3.png").convert_alpha())
+
 
 class Game():
 
@@ -304,6 +314,8 @@ class Game():
         reticle = pygame.image.load("graphic/reticle_2.png").convert_alpha()
         pygame.mouse.set_visible(False)
         clock = pygame.time.Clock()
+        font1 = pygame.font.Font(None, 60)
+        font2 = pygame.font.Font(None, 45)
 
         group = pygame.sprite.RenderUpdates()
         Shot_1.containers = group
@@ -317,24 +329,60 @@ class Game():
         rect_fg = fg.get_rect()
         rect_bg = bg.get_rect()
 
+        #プレイヤー弾関連
+        shot1_max_bullet = 12
+        shot1_bullet = 12
+        shot2_max_bullet = 60
+        shot2_bullet = 60
+
+        isShot1_Active = True
+        shot1_reboot_count = 180
+        shot1_reboot_timer = 0
+        isShot2_Active = True
+        shot2_reboot_count = 120
+        shot2_reboot_timer = 0
         s2_count = 0
 
-        while (1):
+        #プレイヤーステータス関連
+
+        while True:
             pygame.display.update()
             clock.tick(FPS)
             #pygame.time.wait(30)
             #screen.fill((0,0,0))        # 画面を黒色(#000000)に塗りつぶし
 
+            #txt1_1 = font1.render("{}".format(str(shot1_bullet)).rjust(6) if isShot1_Active == True else "RELOAD".rjust(6), True, GREEN)
+            #txt2_1 = font1.render("{}".format(str(shot2_bullet)).rjust(6) if isShot2_Active == True else "RELOAD".rjust(6), True, GREEN)
+
+            txt1 = font1.render("{}".format(str(shot1_bullet)).rjust(6), True, GREEN)
+            txt2 = font1.render("{}".format(str(shot2_bullet)).rjust(6), True, GREEN)
+            txt3 = font2.render("RELOAD".rjust(6), True, GREEN)
+
+            if isShot1_Active == False:
+                shot1_reboot_timer -= 1
+                if shot1_reboot_timer == 0:
+                    isShot1_Active = True
+                    shot1_bullet = shot1_max_bullet
+            if isShot2_Active == False:
+                shot2_reboot_timer -= 1
+                if shot2_reboot_timer == 0:
+                    isShot2_Active = True
+                    shot2_bullet = shot2_max_bullet
+
             mouse_pressed = pygame.mouse.get_pressed()
             if mouse_pressed[2]:
-                if s2_count == 0:
-                    s2_count += 1
-                    Shot_2(RETICLE_WIDTH,RETICLE_HEIGHT)
-                    print ("処理ああああを開始します")
-                elif s2_count < 5:
-                    s2_count += 1
-                else:
-                    s2_count = 0
+                if isShot2_Active == True:
+                    if s2_count == 0:
+                        s2_count += 1
+                        shot2_bullet -= 1
+                        Shot_2(RETICLE_WIDTH,RETICLE_HEIGHT)
+                        if shot2_bullet == 0:
+                            isShot2_Active = False
+                            shot2_reboot_timer = shot2_reboot_count
+                    elif s2_count < 5:
+                        s2_count += 1
+                    else:
+                        s2_count = 0
             else:
                 s2_count = 0
 
@@ -346,8 +394,23 @@ class Game():
                     RETICLE_HEIGHT -= int(reticle.get_height()/2)
 
                 if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                    Shot_1(RETICLE_WIDTH,RETICLE_HEIGHT)
-                    print ("処理を開始します")
+                    if isShot1_Active == True:
+                        shot1_bullet -= 1
+                        Shot_1(RETICLE_WIDTH,RETICLE_HEIGHT)
+                        if shot1_bullet == 0:
+                            isShot1_Active = False
+                            shot1_reboot_timer = shot1_reboot_count
+
+                if event.type == KEYDOWN:
+                    if event.key == K_q:
+                        if isShot1_Active == True:
+                            isShot1_Active = False
+                            shot1_reboot_timer = shot1_reboot_count
+                if event.type == KEYDOWN:
+                    if event.key == K_e:
+                        if isShot2_Active == True:
+                            isShot2_Active = False
+                            shot2_reboot_timer = shot2_reboot_count
                 
                 #if event.type == MOUSEBUTTONDOWN and event.button == 3:
                 #if event.type == mouse_pressed[2] and event.button == 3:
@@ -369,6 +432,8 @@ class Game():
             group.update()
             group.draw(self.screen)
             self.screen.blit(fg, rect_fg)
+            self.screen.blit(txt1 if isShot1_Active == True else txt3, [120, 47] if isShot1_Active == True else [100,54])
+            self.screen.blit(txt2 if isShot2_Active == True else txt3, [880, 47] if isShot2_Active == True else [865,54])
 
 game = Game()
 game.main()
