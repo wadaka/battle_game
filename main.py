@@ -290,7 +290,7 @@ class Shot_2_Hit(pygame.sprite.Sprite):
             self.kill()
 
 class Sol_1(pygame.sprite.Sprite):
-    def __init__(self,x,y,z):
+    def __init__(self,x,y):
         pygame.sprite.Sprite.__init__(self,self.containers)
         self.hp = 1
 
@@ -298,6 +298,12 @@ class Sol_1(pygame.sprite.Sprite):
         self.images.append(pygame.image.load("graphic/sol1.png").convert_alpha())
         self.images.append(pygame.image.load("graphic/sol2.png").convert_alpha())
         self.images.append(pygame.image.load("graphic/sol3.png").convert_alpha())
+
+        self.image = self.images[self.index]
+
+
+    def update(self):
+
 
 
 class Game():
