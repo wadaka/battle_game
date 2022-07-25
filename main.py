@@ -67,6 +67,10 @@ class Shot_1(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = [self.go_to_x,self.go_to_y]
 
+    def dead(self):
+        Shot_1_Hit(self.go_to_x,self.go_to_y,0)
+        self.kill()
+
     def update(self):
         self.count += 1
 
@@ -193,6 +197,10 @@ class Shot_2(pygame.sprite.Sprite):
         """
         self.rect = self.image.get_rect()
         self.rect.center = [self.go_to_x,self.go_to_y]
+    
+    def dead(self):
+        Shot_2_Hit(self.go_to_x,self.go_to_y,0)
+        self.kill()
 
 
     def update(self):
@@ -289,21 +297,427 @@ class Shot_2_Hit(pygame.sprite.Sprite):
         if self.count == 10:
             self.kill()
 
-class Sol_1(pygame.sprite.Sprite):
-    def __init__(self,x,y):
+class Soldier_1(pygame.sprite.Sprite):
+    def __init__(self,x,y,pattern):
         pygame.sprite.Sprite.__init__(self,self.containers)
+
         self.hp = 1
+        self.count = 0
+        self.pattern = pattern
 
-        self.images = list()
-        self.images.append(pygame.image.load("graphic/sol1.png").convert_alpha())
-        self.images.append(pygame.image.load("graphic/sol2.png").convert_alpha())
-        self.images.append(pygame.image.load("graphic/sol3.png").convert_alpha())
+        self.pos_x = x
+        self.pos_y = y
 
-        self.image = self.images[self.index]
+        self.state = "appear"
 
+        self.images_ap = list()
+        self.images_def = list()
+        self.images_dead = list()
+
+        self.sp_num = 0
+
+        self.image_debug = pygame.Rect(0,0,0,0)
+
+        self.cor_list = []
+        self.cor = pygame.Rect(0,0,0,0)
+
+        #登場パターン 1:転がり、2:転がり(逆)、3:遮蔽(左)、4:遮蔽(右)、5:遮蔽(下)
+        if self.pattern == 1 or self.pattern == 2:
+            for i in range(10):
+                img_name = 'graphic/sol_start_{}_{}.png'.format(self.pattern,i+1)
+                self.images_ap.append(pygame.image.load(img_name).convert_alpha())
+        elif self.pattern == 5:
+            for i in range(7,11):
+                img_name = 'graphic/sol_start_1_{}.png'.format(i)
+                self.images_ap.append(pygame.image.load(img_name).convert_alpha())
+
+        
+        #デフォルトパターン
+        for i in range(3):
+            img_name = 'graphic/sol_default_1_{}.png'.format(i+1)
+            self.images_def.append(pygame.image.load(img_name).convert_alpha())
+
+        #死亡パターン
+        for i in range(8):
+            img_name = 'graphic/sol_dead_1_{}.png'.format(i+1)
+            self.images_dead.append(pygame.image.load(img_name).convert_alpha())
+
+        self.index = 0
+        self.image = self.images_ap[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = [self.pos_x,self.pos_y]
+
+    def appear_01(self):
+        if self.count < 82:
+
+            if self.count < 36:
+                self.pos_x += 5
+            elif self.count < 45:
+                self.pos_x += 3
+            elif self.count < 58:
+                self.pos_x += 2
+            elif self.count < 70:
+                self.pos_x += 1
+            elif self.count >70 and self.count %2 ==0:
+                self.pos_x +=1
+
+            if self.count < 10:
+                self.pos_y -= 2
+            elif self.count < 22:
+                self.pos_y -= 1
+            elif 24 < self.count < 42 and self.count %3 == 0:
+                self.pos_y += 3
+
+            if 22 < self.count < 46:
+                self.pos_y += 1
+            
+        if self.count >= 19:
+            if self.count %6 == 0:
+                if self.index >= 9:
+                    self.index = 0
+                    self.count = 0
+                    self.state = "default"
+                else:
+                    if 0 < self.sp_num <= 3:
+                        self.sp_num += 1
+                    elif self.sp_num > 2:
+                        self.sp_num = 0
+                    else:
+                        self.index += 1
+                        self.image = self.images_ap[self.index]
+
+                        if self.index == 5:
+                            self.pos_x += 30
+                            self.sp_num = 1
+        self.rect.center = [self.pos_x,self.pos_y]
+
+        
+        if self.index == 0:
+            self.cor = pygame.Rect(self.pos_x+2,self.pos_y+22,70,50)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 1:
+            self.cor = pygame.Rect(self.pos_x+10,self.pos_y+16,50,75)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 2:
+            self.cor = pygame.Rect(self.pos_x+11,self.pos_y+2,40,70)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 3:
+            self.cor = pygame.Rect(self.pos_x+22,self.pos_y+12,50,3)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 4:
+            self.cor = pygame.Rect(self.pos_x+10,self.pos_y+40,65,45)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 5:
+            self.cor = pygame.Rect(self.pos_x+2,self.pos_y+35,45,50)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 6:
+            self.cor = pygame.Rect(self.pos_x+2,self.pos_y+30,45,55)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 7:
+            self.cor = pygame.Rect(self.pos_x+2,self.pos_y+30,45,65)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 8:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+4,50,80)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 9:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+4,50,80)
+            self.cor.center = [self.pos_x,self.pos_y]
+
+    def appear_02(self):
+        if self.count < 82:
+
+            if self.count < 36:
+                self.pos_x -= 5
+            elif self.count < 45:
+                self.pos_x -= 3
+            elif self.count < 58:
+                self.pos_x -= 2
+            elif self.count < 70:
+                self.pos_x -= 1
+            elif self.count >70 and self.count %2 ==0:
+                self.pos_x -=1
+
+            if self.count < 10:
+                self.pos_y -= 2
+            elif self.count < 22:
+                self.pos_y -= 1
+            elif 24 < self.count < 42 and self.count %3 == 0:
+                self.pos_y += 3
+
+            if 22 < self.count < 46:
+                self.pos_y += 1
+            
+        if self.count >= 19:
+            if self.count %6 == 0:
+                if self.index >= 9:
+                    self.index = 0
+                    self.count = 0
+                    self.state = "default"
+                else:
+                    if 0 < self.sp_num <= 3:
+                        self.sp_num += 1
+                    elif self.sp_num > 2:
+                        self.sp_num = 0
+                    else:
+                        self.index += 1
+                        self.image = self.images_ap[self.index]
+
+                        if self.index == 5:
+                            self.pos_x -= 30
+                            self.sp_num = 1
+        self.rect.center = [self.pos_x,self.pos_y]
+
+        
+        if self.index == 0:
+            self.cor = pygame.Rect(self.pos_x+6,self.pos_y+22,70,50)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 1:
+            self.cor = pygame.Rect(self.pos_x+20,self.pos_y+16,50,75)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 2:
+            self.cor = pygame.Rect(self.pos_x+29,self.pos_y+2,40,70)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 3:
+            self.cor = pygame.Rect(self.pos_x+8,self.pos_y+12,50,3)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 4:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+40,65,45)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 5:
+            self.cor = pygame.Rect(self.pos_x+23,self.pos_y+35,45,50)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 6:
+            self.cor = pygame.Rect(self.pos_x+28,self.pos_y+30,45,55)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 7:
+            self.cor = pygame.Rect(self.pos_x+28,self.pos_y+30,45,65)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 8:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+4,50,80)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 9:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+4,50,80)
+            self.cor.center = [self.pos_x,self.pos_y]
+        
+    def default_01(self):
+        if self.index < 3:
+            if self.count %6 == 1:
+                self.image = self.images_def[self.index]
+                self.index += 1
+        if self.count >= 60:
+            self.count = 0
+            self.state = "attack"
+        self.cor = pygame.Rect(self.pos_x+5,self.pos_x+14,50,70)
+        self.cor.center = [self.pos_x,self.pos_y]
+
+    def attack_01(self):
+        if self.index > 1:
+            if self.count %6 == 1:
+                self.index -= 1
+                self.image = self.images_def[self.index]
+        if self.count >= 160:
+            self.count = 0
+            self.index = 1
+            self.state = "default"
+        self.cor = pygame.Rect(self.pos_x+5,self.pos_x+14,50,70)
+        self.cor.center = [self.pos_x,self.pos_y]
+
+    def hit(self):
+        self.hp -=1
+        if self.hp < 1:
+            self.state = "dead"
+            self.count = 0
+            print("しにました～")
 
     def update(self):
+        self.count += 1
+        if self.state == "dead":
+            self.kill()
+        elif self.state == "appear":
+            if self.pattern == 1:
+                self.appear_01()
+            elif self.pattern == 2:
+                self.appear_02()
+        elif self.state == "default":
+            self.default_01()
+        elif self.state == "attack":
+            self.attack_01()
 
+class Soldier_1_dead(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+        self.count = 0
+
+        self.pos_x = x
+        self.pos_y = y
+
+        self.images_dead = list()
+
+        #死亡パターン
+        for i in range(8):
+            img_name = 'graphic/sol_dead_1_{}.png'.format(i+1)
+            self.images_dead.append(pygame.image.load(img_name).convert_alpha())
+
+        self.index = 0
+        self.image = self.images_dead[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = [self.pos_x,self.pos_y]
+
+    def dead(self):
+        if self.count <= 160:
+            if self.count %12 == 0 and self.index < 7:
+                self.index += 1
+                self.image = self.images_dead[self.index]
+        else:
+            self.kill()
+
+    def update(self):
+        self.count += 1
+        self.dead()
+
+class Soldier_2(pygame.sprite.Sprite):
+    def __init__(self,x,y,pattern):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+
+        self.hp = 1
+        self.count = 0
+        self.pattern = pattern
+
+        self.pos_x = x
+        self.pos_y = y
+
+        self.state = "appear"
+
+        self.images_ap = list()
+        self.images_def = list()
+        self.images_dead = list()
+
+        self.sp_num = 0
+
+        self.cor_list = []
+        self.cor = pygame.Rect(0,0,0,0)
+
+        #登場パターン 1:遮蔽(下)
+        if self.pattern == 1:
+            for i in range(7,11):
+                img_name = 'graphic/sol_start_1_{}.png'.format(i)
+                self.images_ap.append(pygame.image.load(img_name).convert_alpha())
+
+        #デフォルトパターン
+        for i in range(3):
+            img_name = 'graphic/sol_default_1_{}.png'.format(i+1)
+            self.images_def.append(pygame.image.load(img_name).convert_alpha())
+
+        #死亡パターン
+        for i in range(8):
+            img_name = 'graphic/sol_dead_1_{}.png'.format(i+1)
+            self.images_dead.append(pygame.image.load(img_name).convert_alpha())
+
+        self.index = 0
+        self.image = self.images_ap[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = [self.pos_x,self.pos_y]
+
+    def appear_01(self):
+            
+        if self.count %6 == 0:
+            if self.index >= 3:
+                self.index = 0
+                self.count = 0
+                self.state = "default"
+            else:
+                self.index += 1
+                self.image = self.images_ap[self.index]
+
+        self.rect.center = [self.pos_x,self.pos_y]
+        
+        if self.index == 0:
+            self.cor = pygame.Rect(self.pos_x+2,self.pos_y+30,45,55)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 1:
+            self.cor = pygame.Rect(self.pos_x+2,self.pos_y+30,45,65)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 2:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+4,50,80)
+            self.cor.center = [self.pos_x,self.pos_y]
+        elif self.index == 3:
+            self.cor = pygame.Rect(self.pos_x+5,self.pos_y+4,50,80)
+            self.cor.center = [self.pos_x,self.pos_y]
+
+        
+    def default_01(self):
+        if self.index < 3:
+            if self.count %6 == 1:
+                self.image = self.images_def[self.index]
+                self.index += 1
+        if self.count >= 60:
+            self.count = 0
+            self.state = "attack"
+        self.cor = pygame.Rect(self.pos_x+5,self.pos_x+14,50,70)
+        self.cor.center = [self.pos_x,self.pos_y]
+
+    def attack_01(self):
+        if self.index > 1:
+            if self.count %6 == 1:
+                self.index -= 1
+                self.image = self.images_def[self.index]
+        if self.count >= 160:
+            self.count = 0
+            self.index = 1
+            self.state = "default"
+        self.cor = pygame.Rect(self.pos_x+5,self.pos_x+14,50,70)
+        self.cor.center = [self.pos_x,self.pos_y]
+
+    def hit(self):
+        self.hp -=1
+        if self.hp < 1:
+            self.state = "dead"
+            self.count = 0
+            print("しにました～")
+
+    def update(self):
+        self.count += 1
+        if self.state == "dead":
+            self.kill()
+        elif self.state == "appear":
+            if self.pattern == 1:
+                self.appear_01()
+        elif self.state == "default":
+            self.default_01()
+        elif self.state == "attack":
+            self.attack_01()
+
+class Soldier_2_dead(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+        self.count = 0
+
+        self.pos_x = x
+        self.pos_y = y
+
+        self.images_dead = list()
+
+        #死亡パターン
+        for i in range(8):
+            img_name = 'graphic/sol_dead_1_{}.png'.format(i+1)
+            self.images_dead.append(pygame.image.load(img_name).convert_alpha())
+
+        self.index = 0
+        self.image = self.images_dead[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = [self.pos_x,self.pos_y]
+
+    def dead(self):
+        if self.count <= 160:
+            if self.count %12 == 0 and self.index < 7:
+                self.index += 1
+                self.image = self.images_dead[self.index]
+        else:
+            self.kill()
+
+    def update(self):
+        self.count += 1
+        self.dead()
 
 
 class Game():
@@ -323,17 +737,33 @@ class Game():
         font1 = pygame.font.Font(None, 60)
         font2 = pygame.font.Font(None, 45)
 
+        shot1_group = pygame.sprite.RenderUpdates()
+        Shot_1.containers = shot1_group
+        shot2_group = pygame.sprite.RenderUpdates()
+        Shot_2.containers = shot2_group
         group = pygame.sprite.RenderUpdates()
-        Shot_1.containers = group
         Shot_1_Hit.containers = group
-        Shot_2.containers = group
         Shot_2_Hit.containers = group
+        enemy_group = pygame.sprite.RenderUpdates()
+        Soldier_1.containers = enemy_group
+        Soldier_1_dead.containers = enemy_group
+        enemy_group_2 = pygame.sprite.RenderUpdates()
+        Soldier_2.containers = enemy_group_2
+        Soldier_2_dead.containers = enemy_group_2
 
-        bg = pygame.image.load("graphic/bg.png").convert_alpha()
+        self.shot1_num = []
+        self.shot2_num = []
+        self.soldier_1_num = []
+        self.soldier_2_num = []
+
+        bg_1 = pygame.image.load("graphic/bg_1.png").convert_alpha()
+        bg_2 = pygame.image.load("graphic/bg_2.png").convert_alpha()
+        bg_3 = pygame.image.load("graphic/bg_3.png").convert_alpha()
+        bg_4 = pygame.image.load("graphic/bg_4.png").convert_alpha()
         fg = pygame.image.load("graphic/fg.png").convert_alpha()
 
         rect_fg = fg.get_rect()
-        rect_bg = bg.get_rect()
+        rect_bg = bg_1.get_rect()
 
         #プレイヤー弾関連
         shot1_max_bullet = 12
@@ -349,13 +779,16 @@ class Game():
         shot2_reboot_timer = 0
         s2_count = 0
 
+        game_count = 0
+
         #プレイヤーステータス関連
 
         while True:
             pygame.display.update()
             clock.tick(FPS)
+            game_count += 1
             #pygame.time.wait(30)
-            #screen.fill((0,0,0))        # 画面を黒色(#000000)に塗りつぶし
+            self.screen.fill((0,0,0))        # 画面を黒色(#000000)に塗りつぶし
 
             #txt1_1 = font1.render("{}".format(str(shot1_bullet)).rjust(6) if isShot1_Active == True else "RELOAD".rjust(6), True, GREEN)
             #txt2_1 = font1.render("{}".format(str(shot2_bullet)).rjust(6) if isShot2_Active == True else "RELOAD".rjust(6), True, GREEN)
@@ -381,7 +814,7 @@ class Game():
                     if s2_count == 0:
                         s2_count += 1
                         shot2_bullet -= 1
-                        Shot_2(RETICLE_WIDTH,RETICLE_HEIGHT)
+                        self.shot2_num.append(Shot_2(RETICLE_WIDTH,RETICLE_HEIGHT))
                         if shot2_bullet == 0:
                             isShot2_Active = False
                             shot2_reboot_timer = shot2_reboot_count
@@ -402,7 +835,7 @@ class Game():
                 if event.type == MOUSEBUTTONDOWN and event.button == 1:
                     if isShot1_Active == True:
                         shot1_bullet -= 1
-                        Shot_1(RETICLE_WIDTH,RETICLE_HEIGHT)
+                        self.shot1_num.append(Shot_1(RETICLE_WIDTH,RETICLE_HEIGHT))
                         if shot1_bullet == 0:
                             isShot1_Active = False
                             shot1_reboot_timer = shot1_reboot_count
@@ -432,11 +865,113 @@ class Game():
                     if event.key == K_ESCAPE:   # Escキーが押されたとき
                         pygame.quit()
                         sys.exit()
+                
+            #shot1_collison = pygame.sprite.groupcollide(shot1_group,enemy_group,False,True)
+            #for i in shot1_collison:
+                #if self.i.self.count
 
-            self.screen.blit(bg, rect_bg)
-            self.screen.blit(reticle,(RETICLE_WIDTH,RETICLE_HEIGHT))
+            for i in reversed(range(len(self.shot1_num))):
+                if self.shot1_num[i].count == 28:
+                    print("shot1、判定実行")
+                    for j in reversed(range(len(self.soldier_1_num))):
+                        if self.soldier_1_num[j].cor.colliderect(self.shot1_num[i].myrect_1) == True:
+                            print("shot2、命中")
+                            self.shot1_num[i].dead()
+                            self.soldier_1_num[j].hit()
+                            del self.shot1_num[i]
+
+                            if self.soldier_1_num[j].state == "dead":
+                                print("へいし、志望")
+                                Soldier_1_dead(self.soldier_1_num[j].pos_x,self.soldier_1_num[j].pos_y)
+                                del self.soldier_1_num[j]
+                            break
+                elif self.shot1_num[i].count == 30:
+                    print("shot1、判定実行")
+                    for j in reversed(range(len(self.soldier_2_num))):
+                        if self.soldier_2_num[j].cor.colliderect(self.shot1_num[i].myrect_1) == True:
+                            print("shot2、命中")
+                            self.shot1_num[i].dead()
+                            self.soldier_2_num[j].hit()
+                            del self.shot1_num[i]
+
+                            if self.soldier_2_num[j].state == "dead":
+                                print("へいし、志望")
+                                Soldier_2_dead(self.soldier_2_num[j].pos_x,self.soldier_2_num[j].pos_y)
+                                del self.soldier_2_num[j]
+                            break
+
+            for i in reversed(range(len(self.shot2_num))):
+                if self.shot2_num[i].count == 14:
+                    print("shot2、判定実行")
+                    for j in reversed(range(len(self.soldier_1_num))):
+                        #if self.shot2_num[i].myrect_1.collidelist(self.soldier_1_num[j].cor) != -1:
+                        if self.soldier_1_num[j].cor.colliderect(self.shot2_num[i].myrect_1) == True:
+                            print("shot2、命中")
+                            self.shot2_num[i].dead()
+                            self.soldier_1_num[j].hit()
+                            del self.shot2_num[i]
+
+                            if self.soldier_1_num[j].state == "dead":
+                                print("へいし、志望")
+                                Soldier_1_dead(self.soldier_1_num[j].pos_x,self.soldier_1_num[j].pos_y)
+                                del self.soldier_1_num[j]
+                            break
+                elif self.shot2_num[i].count == 16:
+                    print("shot2、判定実行")
+                    for j in reversed(range(len(self.soldier_2_num))):
+                        #if self.shot2_num[i].myrect_1.collidelist(self.soldier_1_num[j].cor) != -1:
+                        if self.soldier_2_num[j].cor.colliderect(self.shot2_num[i].myrect_1) == True:
+                            print("shot2、命中")
+                            self.shot2_num[i].dead()
+                            self.soldier_2_num[j].hit()
+                            del self.shot2_num[i]
+
+                            if self.soldier_2_num[j].state == "dead":
+                                print("へいし、志望")
+                                Soldier_2_dead(self.soldier_2_num[j].pos_x,self.soldier_2_num[j].pos_y)
+                                del self.soldier_2_num[j]
+                            break
+            if game_count == 300:
+                #Soldier_1(160,380,1)
+                #self.soldier_1_num.append(Soldier_1(200,380,1))
+                self.soldier_1_num.append(Soldier_1(20,400,1))
+            
+            if game_count == 360:
+                self.soldier_1_num.append(Soldier_1(1084,400,2))
+
+            if game_count == 420:
+                self.soldier_2_num.append(Soldier_2(510,360,1))
+
+            if len(self.soldier_1_num) <1 and game_count % 300 == 0:
+                self.soldier_1_num.append(Soldier_1(20,400,1))
+
+            if len(self.soldier_1_num) <1 and game_count % 360 == 0:
+                self.soldier_1_num.append(Soldier_1(1084,400,2))
+            
+            if len(self.soldier_2_num) <1 and game_count % 420 == 0:
+                self.soldier_2_num.append(Soldier_2(510,360,1))
+
+
+            self.screen.blit(bg_4, rect_bg)
+            self.screen.blit(bg_3, rect_bg)
+            self.screen.blit(bg_2, rect_bg)
+
+            enemy_group_2.update()
+            enemy_group_2.draw(self.screen)
+
+            self.screen.blit(bg_1, rect_bg)
+
+            enemy_group.update()
+            enemy_group.draw(self.screen)
+
+            shot1_group.update()
+            shot1_group.draw(self.screen)
+            shot2_group.update()
+            shot2_group.draw(self.screen)
             group.update()
             group.draw(self.screen)
+
+            self.screen.blit(reticle,(RETICLE_WIDTH,RETICLE_HEIGHT))
             self.screen.blit(fg, rect_fg)
             self.screen.blit(txt1 if isShot1_Active == True else txt3, [120, 47] if isShot1_Active == True else [100,54])
             self.screen.blit(txt2 if isShot2_Active == True else txt3, [880, 47] if isShot2_Active == True else [865,54])
