@@ -504,9 +504,10 @@ class Soldier_1(pygame.sprite.Sprite):
             if self.count %6 == 1:
                 self.image = self.images_def[self.index]
                 self.index += 1
-        if self.count >= 60:
+        elif self.count >= 120:
             self.count = 0
             self.state = "attack"
+            Warning_ring(self.pos_x,self.pos_y)
         self.cor = pygame.Rect(self.pos_x+5,self.pos_x+14,50,70)
         self.cor.center = [self.pos_x,self.pos_y]
 
@@ -515,7 +516,11 @@ class Soldier_1(pygame.sprite.Sprite):
             if self.count %6 == 1:
                 self.index -= 1
                 self.image = self.images_def[self.index]
-        if self.count >= 160:
+        if self.count >= 60 and self.count %3 ==0:
+            Soldier_mzr(self.pos_x,self.pos_y)
+        if self.count >= 60 and self.count % 5==0:
+            Damage_effect()
+        if self.count >= 120:
             self.count = 0
             self.index = 1
             self.state = "default"
@@ -650,9 +655,10 @@ class Soldier_2(pygame.sprite.Sprite):
             if self.count %6 == 1:
                 self.image = self.images_def[self.index]
                 self.index += 1
-        if self.count >= 60:
+        elif self.count >= 160:
             self.count = 0
             self.state = "attack"
+            Warning_ring(self.pos_x+10,self.pos_y)
         self.cor = pygame.Rect(self.pos_x+5,self.pos_x+14,50,70)
         self.cor.center = [self.pos_x,self.pos_y]
 
@@ -661,7 +667,11 @@ class Soldier_2(pygame.sprite.Sprite):
             if self.count %6 == 1:
                 self.index -= 1
                 self.image = self.images_def[self.index]
-        if self.count >= 160:
+        if self.count >= 60 and self.count %3 ==0:
+            Soldier_mzr(self.pos_x+10,self.pos_y)
+        if self.count >= 60 and self.count % 5==0:
+            Damage_effect()
+        if self.count >= 120:
             self.count = 0
             self.index = 1
             self.state = "default"
@@ -720,6 +730,94 @@ class Soldier_2_dead(pygame.sprite.Sprite):
         self.dead()
 
 
+class Soldier_mzr(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+        self.count = 0
+
+        self.pos_x = x-20
+        self.pos_y = y
+
+        self.images_mzr = list()
+
+        rot_rdm = random.randint(0,360)
+
+        #まずるパターン
+        for i in range(8):
+            img_name = 'graphic/sol_mzr_f_{}.png'.format(i+1)
+            img_road = pygame.image.load(img_name).convert_alpha()
+            img_rotate = pygame.transform.rotozoom(img_road,rot_rdm,1.0)
+            self.images_mzr.append(img_rotate)
+
+        self.index = 0
+        self.image = self.images_mzr[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = [self.pos_x,self.pos_y]
+
+    def update(self):
+        self.count += 1
+        if self.count <= 24:
+            if self.count %3 == 0 and self.index < 7:
+                self.index += 1
+                self.image = self.images_mzr[self.index]
+        else:
+            self.kill()
+
+class Warning_ring(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+        self.count = 0
+
+        self.pos_x = x-20
+        self.pos_y = y
+
+        self.images = list()
+
+        self.images.append(pygame.image.load('graphic/warning_ring_1.png').convert_alpha())
+        self.images.append(pygame.image.load('graphic/warning_ring_2.png').convert_alpha())
+
+        self.index = 0
+        self.image = self.images[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = [self.pos_x,self.pos_y]
+
+    def update(self):
+        self.count += 1
+        if self.count %4 == 0:
+            self.index = 1
+            self.image = self.images[self.index]
+        else:
+            self.index = 0
+            self.image = self.images[self.index]
+
+        if self.count < 30:
+            self.image = pygame.transform.smoothscale(self.images[self.index],(150-self.count*5, 150-self.count*5))
+            self.rect = self.image.get_rect()
+            self.rect.center = [self.pos_x,self.pos_y]
+        else:
+            self.kill()
+
+class Damage_effect(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self,self.containers)
+        self.count = 0
+
+        rdm_x = random.randint(30,990)
+        rdm_y = random.randint(60,470)
+        rdm_rot = random.randint(0,360)
+
+        self.image = pygame.image.load('graphic/bullet_mark.png').convert_alpha()
+        img_rotate = pygame.transform.rotozoom(self.image,rdm_rot,1.0)
+
+        self.rect = self.image.get_rect()
+        self.rect.center = [rdm_x,rdm_y]
+
+    def update(self):
+        self.count += 1
+        if self.count == 60:
+            self.kill()
+
+
 class Game():
 
     def __init__(self) -> None:
@@ -744,6 +842,9 @@ class Game():
         group = pygame.sprite.RenderUpdates()
         Shot_1_Hit.containers = group
         Shot_2_Hit.containers = group
+        Soldier_mzr.containers = group
+        Warning_ring.containers = group
+        Damage_effect.containers = group
         enemy_group = pygame.sprite.RenderUpdates()
         Soldier_1.containers = enemy_group
         Soldier_1_dead.containers = enemy_group
