@@ -434,7 +434,7 @@ class Soldier_1(pygame.sprite.Sprite):
                 self.pos_x -= 2
             elif self.count < 70:
                 self.pos_x -= 1
-            elif self.count >70 and self.count %2 ==0:
+            elif self.count >65 and self.count %2 ==0:
                 self.pos_x -=1
 
             if self.count < 10:
@@ -463,7 +463,7 @@ class Soldier_1(pygame.sprite.Sprite):
                         self.image = self.images_ap[self.index]
 
                         if self.index == 5:
-                            self.pos_x -= 30
+                            self.pos_x -= 20
                             self.sp_num = 1
         self.rect.center = [self.pos_x,self.pos_y]
 
@@ -942,8 +942,8 @@ class Game():
             if game_count == 420:
                 self.soldier_2_num.append(Soldier_2(510,360,1))
 
-            if len(self.soldier_1_num) <1 and game_count % 300 == 0:
-                self.soldier_1_num.append(Soldier_1(20,400,1))
+            #if len(self.soldier_1_num) <1 and game_count % 300 == 0:
+                #self.soldier_1_num.append(Soldier_1(20,400,1))
 
             if len(self.soldier_1_num) <1 and game_count % 360 == 0:
                 self.soldier_1_num.append(Soldier_1(1084,400,2))
