@@ -802,20 +802,31 @@ class Damage_effect(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self,self.containers)
         self.count = 0
 
-        rdm_x = random.randint(30,990)
-        rdm_y = random.randint(60,470)
-        rdm_rot = random.randint(0,360)
+        self.rdm_x = random.randint(30,990)
+        self.rdm_y = random.randint(60,470)
+        self.rdm_rot = random.randint(0,360)
 
         self.image = pygame.image.load('graphic/bullet_mark.png').convert_alpha()
-        img_rotate = pygame.transform.rotozoom(self.image,rdm_rot,1.0)
+        img_rotate = pygame.transform.rotozoom(self.image,self.rdm_rot,1.0)
+        self.image = pygame.transform.smoothscale(self.image,(10, 10))
 
         self.rect = self.image.get_rect()
-        self.rect.center = [rdm_x,rdm_y]
+        self.rect.center = [self.rdm_x,self.rdm_y]
 
     def update(self):
         self.count += 1
-        if self.count == 60:
+        if self.count == 30:
             self.kill()
+        elif self.count <= 6 and self.count %2 == 1:
+            self.image = pygame.image.load('graphic/bullet_mark.png').convert_alpha()
+            img_rotate = pygame.transform.rotozoom(self.image,self.rdm_rot,1.0)
+            self.image = pygame.transform.smoothscale(self.image,(11*self.count, 11*self.count))
+            self.rect = self.image.get_rect()
+            self.rect.center = [self.rdm_x,self.rdm_y]
+        elif self.count == 8:
+            self.image = pygame.image.load('graphic/bullet_mark.png').convert_alpha()
+            self.rect = self.image.get_rect()
+            self.rect.center = [self.rdm_x,self.rdm_y]
 
 
 class Game():
